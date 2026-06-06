@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>The Baker Street Case Files</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=IM+Fell+English:ital@0;1&family=Cinzel:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#1a1208;--parchment:#f5e9c8;--parchment-dark:#e8d5a0;--sepia:#8b6914;--sepia-dark:#5c4308;--fog:#c9b98a;--blood:#8b1a1a;--gold:#c9901e;--gold-light:#e8b84b;--locked-fg:#a89878;--green-win:#4a8020}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background-color:#0d0a05;background-image:radial-gradient(ellipse at 20% 80%,rgba(139,105,20,.12) 0%,transparent 60%),radial-gradient(ellipse at 80% 20%,rgba(60,30,5,.2) 0%,transparent 50%);min-height:100vh;font-family:'IM Fell English',Georgia,serif;color:var(--ink);display:flex;align-items:flex-start;justify-content:center;padding:20px 16px 40px}
+.lamp-glow{position:fixed;top:-80px;left:50%;transform:translateX(-50%);width:500px;height:300px;background:radial-gradient(ellipse,rgba(220,160,40,.18) 0%,transparent 70%);pointer-events:none;z-index:0}
+#app{position:relative;z-index:1;width:100%;max-width:720px}
+.screen{display:none}.screen.active{display:block}
+.masthead{text-align:center;margin-bottom:22px;animation:fadeDown .9s ease both}
+.masthead-rule{display:flex;align-items:center;gap:10px;margin:6px 0}
+.masthead-rule hr{flex:1;border:none;border-top:1.5px solid var(--sepia);opacity:.6}
+.masthead-rule .orn{color:var(--gold);font-size:1rem;opacity:.8}
+.subtitle-tag{font-family:'Cinzel',serif;font-size:.68rem;letter-spacing:.25em;color:var(--fog);text-transform:uppercase;margin-bottom:5px}
+h1{font-family:'Cinzel Decorative',serif;font-size:clamp(1.45rem,5vw,2.3rem);color:var(--gold-light);text-shadow:0 0 30px rgba(201,144,30,.5),0 2px 4px rgba(0,0,0,.8);line-height:1.2}
+.edition-tag{font-family:'IM Fell English',serif;font-style:italic;font-size:.78rem;color:var(--fog);margin-top:4px;opacity:.75}
+.case-card{background:linear-gradient(160deg,#f9f0d8 0%,var(--parchment) 40%,#eddebf 100%);border:1px solid var(--sepia);border-radius:2px;box-shadow:0 0 0 4px rgba(139,105,20,.15),0 8px 40px rgba(0,0,0,.7),inset 0 0 60px rgba(139,105,20,.06);padding:28px 24px 24px;position:relative}
+.case-card::before,.case-card::after{content:'';position:absolute;width:18px;height:18px;border-color:var(--sepia);border-style:solid;opacity:.45}
+.case-card::before{top:8px;left:8px;border-width:2px 0 0 2px}
+.case-card::after{bottom:8px;right:8px;border-width:0 2px 2px 0}
+.menu-intro{font-family:'Cinzel',serif;font-size:.7rem;letter-spacing:.18em;color:var(--sepia-dark);text-transform:uppercase;text-align:center;margin-bottom:20px;opacity:.8}
+.cases-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:8px}
+.case-slot{background:linear-gradient(160deg,#f5ead0 0%,var(--parchment-dark) 100%);border-radius:3px;padding:16px 10px 14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;min-height:120px;cursor:pointer;transition:transform .18s ease,box-shadow .18s ease;position:relative;animation:fadeUp .5s ease both}
+.case-slot:nth-child(1){animation-delay:.05s}.case-slot:nth-child(2){animation-delay:.12s}.case-slot:nth-child(3){animation-delay:.19s}.case-slot:nth-child(4){animation-delay:.26s}.case-slot:nth-child(5){animation-delay:.33s}.case-slot:nth-child(6){animation-delay:.40s}
+.case-slot:nth-child(7){animation-delay:.47s;grid-column:1;grid-row:3}
+.case-slot:nth-child(8){animation-delay:.54s;grid-column:2;grid-row:3}
+.case-slot.unlocked{border:2px solid var(--ink);box-shadow:2px 2px 0 var(--ink),0 4px 16px rgba(0,0,0,.25)}
+.case-slot.unlocked:hover,.case-slot.unlocked:active{transform:translateY(-2px) scale(1.02);box-shadow:3px 5px 0 var(--ink),0 8px 20px rgba(0,0,0,.3)}
+.case-slot.solved{border:2px solid var(--green-win);box-shadow:2px 2px 0 var(--green-win),0 4px 12px rgba(74,128,32,.2)}
+.case-slot.solved:hover,.case-slot.solved:active{transform:translateY(-2px) scale(1.02);box-shadow:3px 5px 0 var(--green-win),0 8px 20px rgba(74,128,32,.25)}
+.case-slot.locked{border:2px dashed var(--locked-fg);cursor:default;opacity:.75}
+.slot-icon{font-size:2.2rem;line-height:1}
+.slot-label{font-family:'Cinzel',serif;font-size:clamp(.58rem,1.8vw,.7rem);letter-spacing:.08em;text-transform:uppercase;line-height:1.3;color:var(--ink)}
+.case-slot.locked .slot-label{color:var(--locked-fg)}
+.case-slot.solved .slot-label{color:var(--green-win)}
+.solved-badge{position:absolute;top:6px;right:6px;background:var(--green-win);color:#fff;font-family:'Cinzel',serif;font-size:.5rem;letter-spacing:.1em;padding:2px 5px;border-radius:2px;text-transform:uppercase}
+.menu-footer{text-align:center;margin-top:12px;font-family:'IM Fell English',serif;font-style:italic;font-size:.78rem;color:var(--sepia-dark);opacity:.7}
+.back-btn{display:inline-flex;align-items:center;gap:6px;background:none;border:1px solid rgba(139,105,20,.4);border-radius:2px;padding:6px 12px;cursor:pointer;font-family:'Cinzel',serif;font-size:.65rem;letter-spacing:.15em;color:var(--fog);text-transform:uppercase;margin-bottom:14px;transition:all .15s ease;-webkit-appearance:none;appearance:none}
+.back-btn:hover{color:var(--gold-light);border-color:var(--gold)}
+.scene-atmosphere{background:linear-gradient(180deg,#1a1208 0%,#0d0a05 60%,#1a1208 100%);border:1px solid rgba(139,105,20,.4);border-radius:1px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:14px;position:relative;overflow:hidden}
+.scene-atmosphere::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 30% 50%,rgba(201,144,30,.08) 0%,transparent 70%)}
+.scene-icon{font-size:2.6rem;flex-shrink:0;filter:drop-shadow(0 0 8px rgba(201,144,30,.4));position:relative;z-index:1}
+.scene-meta{position:relative;z-index:1}
+.scene-label{font-family:'Cinzel',serif;font-size:.63rem;letter-spacing:.2em;color:var(--gold);text-transform:uppercase;margin-bottom:2px;opacity:.8}
+.scene-location{font-family:'IM Fell English',serif;font-style:italic;font-size:.93rem;color:#e8d5a0;opacity:.9}
+.chapter-tag{font-family:'Cinzel',serif;font-size:.6rem;letter-spacing:.2em;color:var(--sepia);text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.chapter-tag::after{content:'';flex:1;height:1px;background:linear-gradient(to right,var(--sepia),transparent);opacity:.4}
+#story-text{font-size:clamp(.95rem,2.5vw,1.06rem);line-height:1.88;color:#2c2010;text-indent:1.5em;margin-bottom:22px;white-space:pre-line}
+.clue-bar{background:rgba(139,105,20,.1);border:1px solid rgba(139,105,20,.25);border-radius:2px;padding:10px 14px;margin-bottom:20px;display:flex;align-items:center;gap:8px;font-family:'Cinzel',serif;font-size:.68rem;letter-spacing:.1em;color:var(--sepia-dark);min-height:40px}
+.clue-bar-icon{font-size:1rem;flex-shrink:0}
+#clue-display{font-style:italic;font-family:'IM Fell English',serif;font-size:.83rem;letter-spacing:.02em}
+.choices-label{font-family:'Cinzel',serif;font-size:.6rem;letter-spacing:.22em;color:var(--sepia);text-transform:uppercase;margin-bottom:10px;opacity:.8}
+.choices-grid{display:flex;flex-direction:column;gap:9px}
+.choice-btn{background:linear-gradient(135deg,#f2e5c0 0%,#e8d49c 100%);border:1.5px solid var(--sepia);border-radius:2px;padding:13px 16px;cursor:pointer;text-align:left;font-family:'IM Fell English',serif;font-size:clamp(.88rem,2.5vw,.98rem);color:var(--ink);line-height:1.5;display:flex;align-items:flex-start;gap:12px;transition:all .18s ease;-webkit-appearance:none;appearance:none;box-shadow:0 2px 8px rgba(0,0,0,.12),inset 0 1px 0 rgba(255,255,255,.4)}
+.choice-btn:hover,.choice-btn:active{background:linear-gradient(135deg,#eddea8 0%,#d4bb72 100%);border-color:var(--gold);transform:translateY(-1px);box-shadow:0 4px 14px rgba(139,105,20,.28),inset 0 1px 0 rgba(255,255,255,.3)}
+.choice-letter{font-family:'Cinzel',serif;font-weight:600;font-size:.72rem;color:var(--sepia);background:rgba(139,105,20,.12);border:1px solid rgba(139,105,20,.3);border-radius:2px;width:26px;height:26px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;letter-spacing:.05em}
+.choice-text{flex:1}
+.outcome-banner{text-align:center;padding:16px 10px 12px;margin-bottom:18px;border-radius:2px}
+.outcome-banner.win{background:linear-gradient(135deg,rgba(90,140,40,.15),rgba(60,100,20,.1));border:1.5px solid rgba(80,130,30,.5)}
+.outcome-banner.lose{background:linear-gradient(135deg,rgba(139,26,26,.15),rgba(100,10,10,.1));border:1.5px solid rgba(139,26,26,.4)}
+.outcome-icon{font-size:2.8rem;margin-bottom:6px;display:block}
+.outcome-title{font-family:'Cinzel Decorative',serif;font-size:clamp(.95rem,3.5vw,1.3rem);margin-bottom:3px}
+.outcome-banner.win .outcome-title{color:var(--green-win)}
+.outcome-banner.lose .outcome-title{color:var(--blood)}
+.outcome-subtitle{font-style:italic;font-size:.83rem;color:var(--sepia-dark)}
+.restart-btn{width:100%;margin-top:16px;background:linear-gradient(135deg,#2a1f08 0%,#1a1208 100%);border:1.5px solid var(--gold);border-radius:2px;padding:14px 20px;font-family:'Cinzel',serif;font-size:.82rem;letter-spacing:.15em;color:var(--gold-light);cursor:pointer;text-transform:uppercase;transition:all .18s ease;box-shadow:0 0 20px rgba(201,144,30,.1);-webkit-appearance:none;appearance:none}
+.restart-btn:hover,.restart-btn:active{background:linear-gradient(135deg,#3d2d0a 0%,#2a1f08 100%);box-shadow:0 0 28px rgba(201,144,30,.22);transform:translateY(-1px)}
+.game-footer{text-align:center;margin-top:14px;font-family:'Cinzel',serif;font-size:.58rem;letter-spacing:.18em;color:rgba(139,105,20,.38);text-transform:uppercase}
+.fade-in{animation:fadeIn .45s ease both}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeDown{from{opacity:0;transform:translateY(-16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+.hidden{display:none!important}
+
+/* ── HUD BAR ── */
+#hud{position:fixed;bottom:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:8px 16px 10px;background:linear-gradient(180deg,rgba(10,7,2,0) 0%,rgba(10,7,2,.96) 30%);pointer-events:none}
+#hud>*{pointer-events:auto}
+#points-display{font-family:'Cinzel',serif;font-size:.78rem;letter-spacing:.15em;color:var(--gold-light);text-shadow:0 0 10px rgba(201,144,30,.5);display:flex;align-items:center;gap:6px}
+#points-display .pts-icon{font-size:1rem}
+#shop-btn{background:linear-gradient(135deg,#2a1f08,#1a1208);border:1.5px solid var(--gold);border-radius:50%;width:48px;height:48px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;cursor:pointer;box-shadow:0 0 16px rgba(201,144,30,.25);transition:all .18s ease;-webkit-appearance:none;appearance:none}
+#shop-btn:hover,#shop-btn:active{box-shadow:0 0 28px rgba(201,144,30,.5);transform:scale(1.08)}
+
+/* ── RESET BUTTON ── */
+#reset-btn{position:fixed;top:12px;right:14px;z-index:200;background:rgba(139,26,26,.85);border:1px solid rgba(180,40,40,.6);border-radius:2px;padding:5px 10px;font-family:'Cinzel',serif;font-size:.58rem;letter-spacing:.15em;color:#f5b0b0;cursor:pointer;text-transform:uppercase;transition:all .15s ease;-webkit-appearance:none;appearance:none;backdrop-filter:blur(4px)}
+#reset-btn:hover{background:rgba(180,30,30,.95);color:#fff}
+
+/* ── SHOP MODAL ── */
+#shop-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:300;display:flex;align-items:flex-end;justify-content:center;animation:fadeIn .2s ease}
+#shop-panel{background:linear-gradient(160deg,#f9f0d8,#eddebf);border:1px solid var(--sepia);border-radius:4px 4px 0 0;width:100%;max-width:720px;max-height:80vh;overflow-y:auto;padding:24px 20px 80px;box-shadow:0 -8px 40px rgba(0,0,0,.7)}
+.shop-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.shop-title{font-family:'Cinzel Decorative',serif;font-size:1.1rem;color:var(--sepia-dark)}
+.shop-close{background:none;border:1px solid var(--sepia);border-radius:2px;width:30px;height:30px;font-size:1rem;cursor:pointer;color:var(--sepia-dark);display:flex;align-items:center;justify-content:center;-webkit-appearance:none;appearance:none}
+.shop-subtitle{font-family:'Cinzel',serif;font-size:.62rem;letter-spacing:.18em;color:var(--sepia);text-transform:uppercase;margin-bottom:14px;opacity:.75}
+.shop-balance{font-family:'Cinzel',serif;font-size:.7rem;letter-spacing:.12em;color:var(--sepia-dark);margin-bottom:18px;padding:8px 12px;background:rgba(139,105,20,.1);border:1px solid rgba(139,105,20,.2);border-radius:2px}
+.theme-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.theme-card{border-radius:3px;padding:14px 12px;cursor:pointer;transition:transform .15s ease,box-shadow .15s ease;position:relative;border:2px solid transparent}
+.theme-card:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,.2)}
+.theme-card.owned{border-color:var(--green-win)}
+.theme-card.active-theme{border-color:var(--gold)!important;box-shadow:0 0 14px rgba(201,144,30,.4)!important}
+.theme-card.locked-theme{opacity:.65;cursor:default}
+.theme-preview{height:36px;border-radius:2px;margin-bottom:8px;border:1px solid rgba(0,0,0,.1)}
+.theme-name{font-family:'Cinzel',serif;font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;font-weight:600;margin-bottom:2px}
+.theme-desc{font-family:'IM Fell English',serif;font-style:italic;font-size:.72rem;line-height:1.4}
+.theme-price{font-family:'Cinzel',serif;font-size:.6rem;letter-spacing:.1em;margin-top:6px;padding:3px 7px;border-radius:2px;display:inline-block;text-transform:uppercase}
+.theme-price.free{background:rgba(74,128,32,.15);color:var(--green-win);border:1px solid rgba(74,128,32,.3)}
+.theme-price.cost{background:rgba(201,144,30,.12);color:var(--sepia-dark);border:1px solid rgba(201,144,30,.3)}
+.theme-price.cant-afford{background:rgba(139,26,26,.1);color:var(--blood);border:1px solid rgba(139,26,26,.25)}
+.theme-badge{position:absolute;top:6px;right:6px;font-family:'Cinzel',serif;font-size:.48rem;letter-spacing:.08em;padding:2px 5px;border-radius:2px;text-transform:uppercase}
+.theme-badge.active{background:var(--gold);color:#1a1208}
+.theme-badge.owned{background:var(--green-win);color:#fff}
+
+/* ── THEMES ── */
+body.theme-midnight{--parchment:#1e1a2e;--parchment-dark:#2a2540;background-color:#0a0812;background-image:radial-gradient(ellipse at 30% 70%,rgba(80,40,140,.2) 0%,transparent 60%)}
+body.theme-midnight .case-card{background:linear-gradient(160deg,#252038,#1e1a2e);border-color:#6040a0}
+body.theme-midnight .slot-label,body.theme-midnight #story-text,body.theme-midnight .choice-btn{color:#d0c0ff}
+body.theme-midnight .choice-btn{background:linear-gradient(135deg,#2a2048,#1e1838);border-color:#6040a0}
+body.theme-midnight .choice-btn:hover{background:linear-gradient(135deg,#3a3060,#2a2048)}
+body.theme-midnight .menu-intro,body.theme-midnight .chapter-tag,body.theme-midnight .clue-bar{color:#a090d0;border-color:rgba(100,60,160,.3)}
+body.theme-midnight .case-slot{background:linear-gradient(160deg,#252038,#1e1a2e)}
+body.theme-midnight .case-slot.unlocked{border-color:#8060c0;box-shadow:2px 2px 0 #6040a0}
+body.theme-midnight h1{color:#c0a0ff;text-shadow:0 0 30px rgba(160,100,255,.5),0 2px 4px rgba(0,0,0,.8)}
+
+body.theme-crimson{--parchment:#2a1010;--parchment-dark:#3a1818;background-color:#0d0505;background-image:radial-gradient(ellipse at 20% 80%,rgba(139,20,20,.2) 0%,transparent 60%)}
+body.theme-crimson .case-card{background:linear-gradient(160deg,#2e1414,#2a1010);border-color:#8b2020}
+body.theme-crimson .slot-label,body.theme-crimson #story-text,body.theme-crimson .choice-btn{color:#f0c8c8}
+body.theme-crimson .choice-btn{background:linear-gradient(135deg,#3a1818,#2a1010);border-color:#8b2020}
+body.theme-crimson .choice-btn:hover{background:linear-gradient(135deg,#501e1e,#3a1414)}
+body.theme-crimson .menu-intro,body.theme-crimson .chapter-tag{color:#c08080}
+body.theme-crimson .case-slot{background:linear-gradient(160deg,#2e1414,#2a1010)}
+body.theme-crimson .case-slot.unlocked{border-color:#c04040;box-shadow:2px 2px 0 #8b2020}
+body.theme-crimson h1{color:#ff9090;text-shadow:0 0 30px rgba(200,60,60,.5),0 2px 4px rgba(0,0,0,.8)}
+
+body.theme-forest{--parchment:#0f1e10;--parchment-dark:#162814;background-color:#050d05;background-image:radial-gradient(ellipse at 60% 30%,rgba(30,80,30,.2) 0%,transparent 60%)}
+body.theme-forest .case-card{background:linear-gradient(160deg,#162018,#0f1e10);border-color:#2d6030}
+body.theme-forest .slot-label,body.theme-forest #story-text,body.theme-forest .choice-btn{color:#b0d8b0}
+body.theme-forest .choice-btn{background:linear-gradient(135deg,#1a2a1a,#0f1e10);border-color:#2d6030}
+body.theme-forest .choice-btn:hover{background:linear-gradient(135deg,#243824,#1a2a1a)}
+body.theme-forest .menu-intro,body.theme-forest .chapter-tag{color:#70a870}
+body.theme-forest .case-slot{background:linear-gradient(160deg,#162018,#0f1e10)}
+body.theme-forest .case-slot.unlocked{border-color:#4a904a;box-shadow:2px 2px 0 #2d6030}
+body.theme-forest h1{color:#80e880;text-shadow:0 0 30px rgba(60,160,60,.5),0 2px 4px rgba(0,0,0,.8)}
+
+body.theme-fog{background-color:#1a1e20;background-image:radial-gradient(ellipse at 50% 50%,rgba(160,180,200,.08) 0%,transparent 70%)}
+body.theme-fog .case-card{background:linear-gradient(160deg,#e8edf0,#dce4e8);border-color:#8899aa}
+body.theme-fog #story-text,body.theme-fog .choice-btn{color:#2a3540}
+body.theme-fog .choice-btn{background:linear-gradient(135deg,#dce4ea,#ccd8e0);border-color:#8899aa}
+body.theme-fog h1{color:#c8dce8;text-shadow:0 0 30px rgba(160,200,220,.4),0 2px 4px rgba(0,0,0,.8)}
+body.theme-fog .case-slot{background:linear-gradient(160deg,#dce4ea,#ccd8e0)}
+body.theme-fog .case-slot.unlocked{border-color:#607080}
+</style>
+</head>
+<body>
+<!-- RESET -->
+<button id="reset-btn" onclick="confirmReset()">⟳ Reset</button>
+<!-- HUD -->
+<div id="hud">
+  <div id="points-display"><span class="pts-icon">🪙</span><span id="pts-val">0</span> pts</div>
+  <button id="shop-btn" onclick="openShop()">🛍️</button>
+</div>
+<!-- SHOP MODAL -->
+<div id="shop-overlay" class="hidden" onclick="closeShopIfOutside(event)">
+  <div id="shop-panel">
+    <div class="shop-header">
+      <div class="shop-title">🛍️ The Detective's Shop</div>
+      <button class="shop-close" onclick="closeShop()">✕</button>
+    </div>
+    <p class="shop-subtitle">Customise your investigation</p>
+    <div class="shop-balance">🪙 Balance: <strong><span id="shop-pts">0</span> points</strong> &nbsp;·&nbsp; Earn 10 pts per solved case, 5 per attempt</div>
+    <div class="theme-grid" id="theme-grid"></div>
+  </div>
+</div>
+<div class="lamp-glow"></div>
+<div id="app">
+
+<div id="menu-screen" class="screen active">
+  <div class="masthead">
+    <p class="subtitle-tag">Detective Agency · London · 1895</p>
+    <div class="masthead-rule"><hr><span class="orn">⚙</span><hr></div>
+    <h1>The Baker Street<br>Case Files</h1>
+    <p class="edition-tag">Featuring Mr. Sherlock Holmes &amp; Dr. John H. Watson</p>
+    <div class="masthead-rule" style="margin-top:8px"><hr><span class="orn">🔍</span><hr></div>
+  </div>
+  <div class="case-card">
+    <p class="menu-intro">Confidential Files — Select a Case</p>
+    <div class="cases-grid" id="cases-grid"></div>
+    <p class="menu-footer" id="menu-footer-msg"></p>
+  </div>
+  <p class="game-footer" style="margin-top:16px">Baker Street Irregulars Press · London · MDCCCXCV</p>
+</div>
+
+<div id="game-screen" class="screen">
+  <div class="masthead" style="margin-bottom:10px">
+    <p class="subtitle-tag" id="game-case-number">Case I</p>
+    <div class="masthead-rule"><hr><span class="orn">🔍</span><hr></div>
+    <h1 id="game-case-title" style="font-size:clamp(1.1rem,4vw,1.8rem)">Case Title</h1>
+  </div>
+  <button class="back-btn" onclick="goToMenu()">← Case Files</button>
+  <div class="case-card">
+    <div class="scene-atmosphere">
+      <div class="scene-icon" id="scene-icon">🌫️</div>
+      <div class="scene-meta">
+        <div class="scene-label">Current Location</div>
+        <div class="scene-location" id="scene-location">London, 1895</div>
+      </div>
+    </div>
+    <div class="chapter-tag" id="chapter-tag">Chapter I</div>
+    <p id="story-text"></p>
+    <div class="clue-bar">
+      <span class="clue-bar-icon">📋</span>
+      <span id="clue-display">No evidence collected yet.</span>
+    </div>
+    <div id="outcome-banner" class="hidden"></div>
+    <div id="choices-section">
+      <div class="choices-label">What do you do, Detective?</div>
+      <div class="choices-grid" id="choices-grid"></div>
+    </div>
+    <button class="restart-btn hidden" id="restart-btn" onclick="restartCurrentCase()">🔍 &nbsp; Investigate Again</button>
+  </div>
+  <p class="game-footer" style="margin-top:14px">Baker Street Irregulars Press · London · MDCCCXCV</p>
+</div>
+
+</div>
+<script>
+const CASE_META=[
+  {id:"locked_room",number:"Case I",title:"The Locked Room",icon:"🚪",unlocked:true},
+  {id:"poison_pen",number:"Case II",title:"The Poison Pen Letters",icon:"✉️",unlocked:false},
+  {id:"missing_heir",number:"Case III",title:"The Missing Heir",icon:"👦",unlocked:false},
+  {id:"stolen_ruby",number:"Case IV",title:"The Stolen Ruby",icon:"💎",unlocked:false},
+  {id:"midnight_train",number:"Case V",title:"Midnight on the 9:15",icon:"🚂",unlocked:false},
+  {id:"opera_ghost",number:"Case VI",title:"The Opera Ghost",icon:"🎭",unlocked:false},
+  {id:"blind_clockmaker",number:"Case VII",title:"The Blind Clockmaker",icon:"🕰️",unlocked:false},
+  {id:"red_thread",number:"Case VIII",title:"The Red Thread",icon:"🧵",unlocked:false},
+];
+
+const C={
+locked_room:{
+  start:{icon:"🌫️",loc:"Whitechapel, London — Past Midnight",ch:"Chapter I · The Crime Scene",clue:"No evidence collected yet.",
+    text:"Inspector Lestrade's telegram arrives at Baker Street just after midnight. You are summoned to Whitechapel, where the wealthy merchant Sir Archibald Fenn has been found dead in his locked study — his prize pocket watch missing and the window left open just a crack.\n\nThe fog hangs thick as you step inside. The room is cold. A half-burned candle sits on the mahogany desk. You notice three things immediately: a set of muddy footprints near the window, Sir Archibald's personal effects scattered on the floor, and Dr. Watson standing near the fireplace, notebook in hand, looking worried.\n\nYour first move will determine everything.",
+    ch_:[{l:"A",t:"Examine the muddy footprints near the window — they could reveal how the intruder entered.",n:"footprints"},{l:"B",t:"Pick up Sir Archibald's pocket watch case from the floor and inspect it closely.",n:"watch_case"},{l:"C",t:"Ask Dr. Watson what he observed when he first arrived at the scene.",n:"watson_1"}]},
+  footprints:{icon:"👣",loc:"The Study Window — Whitechapel",ch:"Chapter II · The Footprints",clue:"Clue: Left-footed limp — one print deeper. Limehouse clay on the sill.",
+    text:"You crouch beside the window, glass in hand. The left foot sinks deeper into the carpet — the intruder has a distinct limp. On the windowsill: a faint smear of brick-red clay from the river bank near Limehouse Dock.\n\nWatson says excitedly, \"Holmes, I noticed the butler, Mr. Crabb, walking with a stiff left knee this very evening!\"",
+    ch_:[{l:"A",t:"Confront Mr. Crabb immediately — his limp matches perfectly!",n:"confront_crabb"},{l:"B",t:"Gather more evidence — examine the desk and half-burned candle.",n:"desk_candle"},{l:"C",t:"Ask Watson to check whether anyone else has a limp.",n:"watson_limp"}]},
+  confront_crabb:{icon:"🎩",loc:"Servants' Quarters — Below Stairs",ch:"Chapter III · The Confrontation",clue:"Clue: Clay-stained overcoat + Limehouse ticket stub in Crabb's pocket.",
+    text:"You find Mr. Crabb attempting to pack a leather bag. When you enter, his face drains of colour.\n\nThe clay matches Limehouse Dock. A ticket stub proves he lied about his whereabouts. And there, wrapped in a handkerchief at the bottom of his bag: Sir Archibald's missing gold pocket watch.\n\nCrabb breaks down and confesses: gambling debt, a struggle, a fatal heart attack.",
+    oc:"win",ot:"Case Solved!",os:"Sharp eyes for footprints cracked the case.",
+    end:"You hand Crabb over to Inspector Lestrade. As the police wagon rattles into the fog, Watson claps you on the shoulder.\n\n\"Extraordinary, Holmes! How did you know?\"\n\nYou allow yourself a small smile. \"Elementary, my dear Watson. A man's footprints never lie.\" ☕"},
+  desk_candle:{icon:"🕯️",loc:"The Study Desk — Whitechapel",ch:"Chapter II · The Burned Candle",clue:"Clue: Half-burned letter bears the Crabb family crest in wax.",
+    text:"The half-burned candle has dripped onto a crumpled letter — someone tried to destroy it. It is a demand for payment from a moneylender, signed only \"C.\" The wax seal shows a thistle — the Crabb family crest.\n\nNow you have footprints, Limehouse clay, AND a financial motive. The evidence is overwhelming.",
+    ch_:[{l:"A",t:"Present all evidence to Lestrade and confront Mr. Crabb at once.",n:"confront_crabb"},{l:"B",t:"Send Watson to search Crabb's room while you keep the butler talking.",n:"watson_search"}]},
+  watson_limp:{icon:"🩺",loc:"The Drawing Room — Whitechapel",ch:"Chapter II · Watson's Inquiry",clue:"Clue: Only Crabb has a left-leg limp. Housekeeper saw him return smelling of river water.",
+    text:"Watson discreetly questions the cook and housekeeper. Both confirm: only Mr. Crabb walks with a stiff left knee.\n\nThe housekeeper also saw Crabb returning through the kitchen entrance near midnight, overcoat damp, smelling of river water. River water. Limehouse clay. A limp. All roads lead to the same man.",
+    ch_:[{l:"A",t:"Confront Crabb in his quarters immediately.",n:"confront_crabb"},{l:"B",t:"Examine the desk one more time before making your move.",n:"desk_candle"}]},
+  watch_case:{icon:"🕰️",loc:"The Study Floor — Whitechapel",ch:"Chapter II · The Pocket Watch",clue:"Clue: Watch case scratched from the left — left-handed. Faint violet perfume detected.",
+    text:"You lift the empty watch case and examine it with your lens. The hinge shows fresh scratches — opened from the left side. A left-handed person.\n\nRaising the case to your nose you detect something extraordinary: violet water. An expensive French perfume favoured by women of quality, not common thieves.\n\nWatson raises an eyebrow. \"Surely you don't suspect a woman was involved?\"",
+    ch_:[{l:"A",t:"Check the visitor's log — find out if any women visited Sir Archibald recently.",n:"visitor_log"},{l:"B",t:"Go check the footprints at the window — perhaps the scent is a red herring.",n:"footprints_late"},{l:"C",t:"Ask Dr. Watson about Sir Archibald's personal life.",n:"watson_woman"}]},
+  visitor_log:{icon:"📖",loc:"The Entrance Hall — Whitechapel",ch:"Chapter III · The Visitor's Log",clue:"Clue: 'Miss V. Pemberton' visited twice — a false name. No such person in London directories.",
+    text:"A \"Miss V. Pemberton\" of Kensington visited Sir Archibald twice this week — on Tuesday and the day of his death. There is no Miss V. Pemberton in any London directory.\n\nThen it strikes you: Sir Archibald's estranged niece, Violet Fenn, was cut out of his will last year. She wears violet water. And she is left-handed.",
+    ch_:[{l:"A",t:"Rush to Violet Fenn's lodgings in Bloomsbury before she can flee!",n:"violet_escape"},{l:"B",t:"Lay a careful trap — send her a telegram to draw her back.",n:"violet_caught"}]},
+  violet_escape:{icon:"🚂",loc:"Victoria Station — London",ch:"Chapter III · Too Late!",clue:"Clue: Train ticket to Paris on the platform. The case has gone cold.",
+    text:"You arrive at Violet Fenn's lodgings to find the door wide open and the wardrobe empty. You race to Victoria Station. The Paris train has just departed, its tail lights vanishing into the foggy night.\n\nLestrade catches up, breathing heavily. \"Lost her, have we, Mr. Holmes?\"\n\nYou moved too quickly, without laying the proper trap. A detective's greatest enemy is impatience.",
+    oc:"lose",ot:"The Criminal Escapes!",os:"Haste was your undoing, Detective.",
+    end:"Violet Fenn is never seen in England again. The pocket watch is never recovered.\n\n\"Never mind, Holmes,\" Watson says gently on the cab ride home. \"You cannot solve them all.\"\n\nYou stare out at the foggy gas-lamps. \"No. But I shall do better next time.\" 🔍"},
+  violet_caught:{icon:"💌",loc:"Baker Street — The Trap is Set",ch:"Chapter III · The Clever Trap",clue:"Clue: Violet Fenn confesses — watch pawned at Houndsditch. Case closed!",
+    text:"You send a telegram to Violet Fenn, signed as a solicitor, claiming Sir Archibald secretly changed his will in her favour — and asking her to collect urgent documents at his study tomorrow morning.\n\nShe arrives at eight o'clock sharp. The moment she steps through the study door, you are waiting. Inspector Lestrade blocks the exit.\n\nUnder questioning she confesses everything: the argument, the stolen watch, the fatal shock she gave her uncle.",
+    oc:"win",ot:"Case Solved!",os:"Your patience and cunning prevailed.",
+    end:"As Lestrade leads Violet Fenn away, she looks back at you with reluctant admiration.\n\n\"How did you know?\"\n\n\"Violet water on a stolen watch case,\" you reply, \"is not the calling card of a common burglar, Miss Fenn.\" ☕"},
+  watson_woman:{icon:"🩺",loc:"The Drawing Room — Whitechapel",ch:"Chapter II · Watson's Knowledge",clue:"Clue: Violet Fenn — estranged niece, left-handed, wears violet water.",
+    text:"Watson thinks carefully. \"Sir Archibald had a niece — Violet Fenn. He cut her out of his will last year over money. Left-handed, too — always struck me as unusual.\"\n\n\"And does she wear violet water?\"\n\nWatson's eyes go wide. \"Holmes... how on earth—\"\n\n\"The watch case told me everything. Violet Fenn is our person.\"",
+    ch_:[{l:"A",t:"Check the visitor's log — see if she signed in under her name.",n:"visitor_log"},{l:"B",t:"Set a clever trap — send her a false telegram to bring her back.",n:"violet_caught"}]},
+  footprints_late:{icon:"👣",loc:"The Study Window — Whitechapel",ch:"Chapter III · Revisiting the Evidence",clue:"Clue: Small boot size — a woman's shoe. Violet perfume strongest at windowsill.",
+    text:"You return to the window with fresh eyes. The footprints are smaller than you first assumed — a woman's narrow-heeled shoe, size four or five. The perfume of violet water is strongest here at the windowsill.\n\nSomeone who knew the house intimately. Watson exclaims, \"Sir Archibald's niece, Violet Fenn! She visited every week before their falling out!\"",
+    ch_:[{l:"A",t:"Set a clever trap — send Violet Fenn a telegram to lure her back.",n:"violet_caught"},{l:"B",t:"Rush to her lodgings right now before she has time to flee!",n:"violet_escape"}]},
+  watson_search:{icon:"🔦",loc:"Servants' Quarters — Below Stairs",ch:"Chapter III · The Search",clue:"Clue: Watch found in Crabb's handkerchief. Gambling debt receipt confirmed.",
+    text:"You keep Mr. Crabb occupied with polite conversation while Watson slips below stairs. Ten minutes later, Watson appears at the study door with a decisive nod.\n\nThe pocket watch — gold, engraved with the family crest — wrapped in a handkerchief bearing the initials \"E.C.\" Along with it: a betting receipt for forty-two pounds.\n\nMr. Crabb's face collapses as you turn to him with the evidence. He confesses immediately.",
+    oc:"win",ot:"Case Solved!",os:"Patience and teamwork caught the culprit.",
+    end:"Mr. Crabb is taken into custody. The watch is returned to the Fenn estate.\n\nWatson looks at you with admiration. \"You always know when to act and when to wait, Holmes.\"\n\n\"The art of the investigation, Watson, is nine parts patience to one part brilliance.\" 🕵️"},
+  watson_1:{icon:"🩺",loc:"The Fireplace — Sir Archibald's Study",ch:"Chapter II · Watson's Account",clue:"Clue: Watson heard a woman's voice arguing with Sir Archibald two evenings ago.",
+    text:"Watson flips open his notebook. \"Two days ago I passed this house on my evening walk. I distinctly heard raised voices — a woman's voice, sharp and high, saying something about money and 'what is rightfully mine.' And there was a scent even from the pavement: violet water. An expensive French perfume.\"",
+    ch_:[{l:"A",t:"Search the study for the visitor's log — find out who this woman was.",n:"visitor_log"},{l:"B",t:"Examine the footprints near the window — do they belong to a woman?",n:"footprints_late"},{l:"C",t:"Ask Watson about Sir Archibald's family and possible enemies.",n:"watson_family"}]},
+  watson_family:{icon:"👨‍👩‍👧",loc:"The Drawing Room — Whitechapel",ch:"Chapter II · Family Secrets",clue:"Clue: Violet Fenn wrote furious letters demanding her inheritance back.",
+    text:"Watson produces a crumpled letter from the Fenn family solicitor. It is from Violet Fenn to her uncle, furious in tone, demanding he restore her inheritance \"before she is forced to take matters into her own hands.\"\n\nThe handwriting slants sharply to the left. Left-handed. The paper smells unmistakably of violet water.",
+    ch_:[{l:"A",t:"Check the visitor's log — find out when she last visited.",n:"visitor_log"},{l:"B",t:"Send Violet Fenn a deceptive telegram to lure her back.",n:"violet_caught"},{l:"C",t:"Rush to her lodgings immediately!",n:"violet_escape"}]},
+},
+poison_pen:{
+  start:{icon:"✉️",loc:"Kensington — A Quiet Townhouse",ch:"Chapter I · The First Letter",clue:"No evidence collected yet.",
+    text:"Lady Agatha Pemberton has been receiving anonymous letters for three weeks — each threatening to reveal a \"shameful secret\" unless she pays one hundred pounds. She has paid twice already.\n\nThe letters are written on expensive cream paper in a cramped, slanted hand. Lady Pemberton insists only four people know her secret: her maid Clara, her solicitor Mr. Finch, her cousin Gerald, and her neighbour the Reverend Arkwright.\n\nYou spread the three letters across the table.",
+    ch_:[{l:"A",t:"Analyse the handwriting and paper closely with your magnifying glass.",n:"handwriting"},{l:"B",t:"Ask Lady Pemberton what the shameful secret actually is.",n:"the_secret"},{l:"C",t:"Request that Watson discreetly follow each of the four suspects today.",n:"watson_tails"}]},
+  handwriting:{icon:"🔬",loc:"The Drawing Room — Lady Pemberton's House",ch:"Chapter II · The Handwriting",clue:"Clue: Left-handed writer. Government-issue nib. Paper watermarked 'Chancery Lane.'",
+    text:"Under your glass the letters reveal their secrets. The hand slants right — this writer holds the pen in their left hand. The ink nib leaves a double-track found only on government-issue writing sets.\n\nThe paper bears a watermark: \"Chancery Lane Stationers.\" Solicitors buy their paper there almost exclusively.\n\nMr. Finch, the solicitor, is left-handed. You noticed when he shook Watson's hand at the door.",
+    ch_:[{l:"A",t:"Confront Mr. Finch immediately with this evidence.",n:"confront_finch"},{l:"B",t:"First find out what the secret is — perhaps Finch has genuine leverage.",n:"the_secret"},{l:"C",t:"Set a trap: have Lady Pemberton agree to pay, then catch the collector.",n:"the_trap"}]},
+  the_secret:{icon:"🤫",loc:"Lady Pemberton's Private Parlour",ch:"Chapter II · The Secret",clue:"Clue: Lord Pemberton had an unacknowledged son. Only Finch had access to the legal papers.",
+    text:"Lady Pemberton wrings her hands. \"My late husband had a son before we married — a child he never acknowledged. If Society learned of this, the resulting scandal would destroy us both.\"\n\nOnly someone with access to Lord Pemberton's private legal papers would know. And those papers are kept in Mr. Finch's office safe.",
+    ch_:[{l:"A",t:"Confront Mr. Finch directly — he had sole access to those papers.",n:"confront_finch"},{l:"B",t:"Examine the letters' handwriting and paper before making any accusation.",n:"handwriting"}]},
+  watson_tails:{icon:"🕵️",loc:"Kensington Streets",ch:"Chapter II · The Watchers",clue:"Clue: Watson observed Finch visiting a pawnbroker twice this week. The man is in serious debt.",
+    text:"Watson spends the afternoon trailing all four suspects.\n\nThe maid Clara visited her mother. The Reverend gave a sermon. Gerald lunched at his club and lost at cards.\n\nBut Mr. Finch the solicitor visited a Holborn pawnbroker twice in four days, and a moneylender once. The man is deeply in debt.",
+    ch_:[{l:"A",t:"Financial pressure is motive enough — confront Finch now.",n:"confront_finch"},{l:"B",t:"Ask Lady Pemberton to confirm the nature of the secret first.",n:"the_secret"}]},
+  confront_finch:{icon:"⚖️",loc:"Finch & Associates, Chancery Lane",ch:"Chapter III · The Solicitor",clue:"Clue: Matching paper found in Finch's desk. Left-handed pen confirmed. He confesses.",
+    text:"You call on Mr. Finch under the pretext of seeking legal advice. As you talk, your eyes go to the blotter: a sheet of cream paper with the same Chancery Lane watermark. His left hand rests beside a government-issue pen.\n\n\"Interesting stationery,\" you remark pleasantly. \"I have been reading about it — in connection with certain anonymous letters.\"\n\nThe colour drains from Finch's face. Within minutes he has confessed everything: debt, desperation, and a terrible mistake.",
+    oc:"win",ot:"Case Solved!",os:"The clues in the paper and ink gave him away.",
+    end:"Mr. Finch is escorted from his offices by Inspector Lestrade. Lady Pemberton, relieved beyond words, presses a generous fee into Watson's hands.\n\n\"How did you unmask him so quickly?\"\n\n\"A solicitor who blackmails his own client invariably uses his own office stationery. Convenience always defeats caution.\" ☕"},
+  the_trap:{icon:"🪤",loc:"Kensington Gardens — The Exchange",ch:"Chapter III · The Trap",clue:"Clue: Finch appeared in person to collect. Caught red-handed with letters in his coat.",
+    text:"You instruct Lady Pemberton to write agreeing to pay, naming a quiet corner of Kensington Gardens at dusk. You and Lestrade conceal yourselves behind the park gate.\n\nThe collector arrives precisely at six. It is not a messenger boy — it is Mr. Finch himself, coat collar up, hat pulled low.\n\nAs he reaches for the envelope, Lestrade steps forward. \"Mr. Finch. You are under arrest.\"",
+    oc:"win",ot:"Case Solved!",os:"The trap snapped perfectly shut.",
+    end:"Finch splutters denials all the way to the police wagon. But the letters in his coat pocket — identical paper to those sent to Lady Pemberton — seal his fate.\n\n\"Brilliantly simple,\" Watson says, beaming.\n\n\"The simplest traps,\" you reply, lighting your pipe, \"are always the most effective.\" ☕"},
+},
+missing_heir:{
+  start:{icon:"👦",loc:"Belgravia — The Ashford Townhouse",ch:"Chapter I · The Vanished Boy",clue:"No evidence collected yet.",
+    text:"Lord and Lady Ashford are in frantic distress. Their twelve-year-old son, Master Tobias Ashford, has not been seen since yesterday morning. He was last observed leaving for his Latin tutor at ten o'clock — but he never arrived.\n\nA ransom note arrived this morning: five hundred pounds, or \"the boy will not be returned.\" But something about the note strikes you as wrong — it is written in a remarkably steady hand for someone engaged in kidnapping.\n\nWhere do you begin?",
+    ch_:[{l:"A",t:"Examine Tobias's room for clues about his state of mind before he disappeared.",n:"tobias_room"},{l:"B",t:"Visit Mr. Greer the Latin tutor and question him thoroughly.",n:"visit_greer"},{l:"C",t:"Analyse the ransom note — something about it troubles you.",n:"ransom_note"}]},
+  tobias_room:{icon:"🛏️",loc:"Master Tobias's Bedchamber",ch:"Chapter II · The Boy's Room",clue:"Clue: Adventure novel dog-eared at 'How to Run Away.' Piggy bank empty. Knapsack missing.",
+    text:"Tobias's bookshelf shows one novel missing from the shelf — its outline visible in the dust. Under the mattress you find an identical copy, dog-eared at a chapter titled \"How to Run Away and Live Free.\"\n\nMore telling: his piggy bank is empty, and his favourite cap and knapsack are gone. This does not look like a kidnapping. This looks like a boy who left voluntarily.\n\nWatson frowns. \"But the ransom note—\"\n\n\"Precisely,\" you say. \"Who sent it, if not the boy's captors?\"",
+    ch_:[{l:"A",t:"Go to the train station — a boy with money and a knapsack would head there.",n:"train_station"},{l:"B",t:"Visit Mr. Greer — perhaps Tobias confided something in his tutor.",n:"visit_greer"},{l:"C",t:"Investigate who sent the ransom note — someone is exploiting the situation.",n:"ransom_note"}]},
+  visit_greer:{icon:"📚",loc:"Mr. Greer's Study — Bloomsbury",ch:"Chapter II · The Tutor",clue:"Clue: Tobias told Greer he 'would not endure another term at Harrow.' He was being bullied.",
+    text:"Mr. Greer is a nervous little man who smells of chalk dust. Under gentle pressure he admits Tobias had been unhappy for weeks.\n\n\"He told me last Tuesday he would rather die than go back to Harrow. He was being bullied terribly. I told him to speak to his father.\"\n\n\"And did he?\"\n\nGreer winces. \"Lord Ashford told him to stop being a coward.\"",
+    ch_:[{l:"A",t:"Go to the train station — Tobias had motive and means to run.",n:"train_station"},{l:"B",t:"Examine the ransom note more carefully — something still bothers you.",n:"ransom_note"}]},
+  ransom_note:{icon:"📄",loc:"The Ashford Drawing Room",ch:"Chapter II · The Ransom Note",clue:"Clue: Note written on Harrow School stationery — the boy wrote it himself.",
+    text:"You hold the ransom note up to the window light. There it is — a ghost image beneath the writing. The paper was torn from a pad of Harrow School stationery. Only a current student would have such paper.\n\nThis note was written by Tobias himself.\n\nThe boy is not kidnapped. He staged his own disappearance, hoping the fear of a ransom would prevent his parents from sending him back to school.",
+    ch_:[{l:"A",t:"Check the train station — he may have fled to a relative's house.",n:"train_station"},{l:"B",t:"Search closer to home — perhaps he is hiding with a friend in the city.",n:"tobias_found"}]},
+  train_station:{icon:"🚂",loc:"Paddington Station",ch:"Chapter III · The Station",clue:"Clue: Tobias bought a ticket to Oxford. His kind aunt Lady Marion lives there.",
+    text:"The ticket clerk at Paddington remembers a boy matching Tobias's description: small, freckled, carrying a brown knapsack, buying a third-class ticket to Oxford.\n\nOxford. Lord Ashford's sister, Lady Marion, lives there. She and the boy were always close — she once called Harrow \"a factory for making miserable young men.\"\n\nYou telegraph ahead. Lady Marion replies within the hour: Tobias is safe, well-fed, and very sorry.",
+    oc:"win",ot:"Case Solved!",os:"The boy was never in danger — just desperate.",
+    end:"You travel to Oxford and find Tobias sitting in Lady Marion's garden, looking sheepish but relieved.\n\n\"I just didn't want to go back,\" he says quietly.\n\n\"I know. But there are better ways to solve a problem than deception — a lesson that applies equally to detectives and twelve-year-olds.\"\n\nLord Ashford, shaken, agrees to let Tobias change schools. ☕"},
+  tobias_found:{icon:"🏠",loc:"A Schoolfellow's House — Chelsea",ch:"Chapter III · The Hideout",clue:"Clue: Tobias found in his friend Percy's attic. Safe and completely unharmed.",
+    text:"On a hunch, you ask Lady Ashford for the names of Tobias's London friends. The second name — a boy named Percy Drummond in Chelsea — has a mother who answers the door with a slightly guilty expression.\n\n\"Is Master Tobias here?\" you ask pleasantly.\n\nA long pause. Then from upstairs: the distinct sound of a floorboard creaking.\n\nTobias comes downstairs looking simultaneously relieved and mortified. He is quite unharmed, living on biscuits and adventure novels.",
+    oc:"win",ot:"Case Solved!",os:"The missing heir was never far from home.",
+    end:"Tobias confesses everything — the bullying, the fake ransom note, the desperate plan. Lord Ashford, to his credit, looks ashamed of himself.\n\n\"I should have listened sooner,\" he says quietly.\n\nAs you and Watson leave, Watson murmurs, \"Sometimes the most important thing a detective does is simply make people talk to each other.\"\n\nYou nod. \"Precisely, Watson. Precisely.\" 🕵️"},
+},
+stolen_ruby:{
+  start:{icon:"💎",loc:"The Beaumont Gallery — Mayfair",ch:"Chapter I · The Empty Case",clue:"No evidence collected yet.",
+    text:"The Star of Calcutta — a flawless fifty-carat ruby owned by the Earl of Beaumont — has vanished from its locked display case during last night's charity gala. The room was full of two hundred guests. The case was found empty at midnight.\n\nThe lock shows no signs of forcing. Four people had keys: the curator Dr. Halley, the Earl's secretary Miss Pryce, the jeweller Soames who inspected it that afternoon, and the night guard Forbes.\n\nWhere do you look first?",
+    ch_:[{l:"A",t:"Examine the display case and its lock with your magnifying glass.",n:"examine_case"},{l:"B",t:"Speak with the night guard Forbes — he was last in the room.",n:"interview_forbes"},{l:"C",t:"Study the guest list from the gala — perhaps a known thief attended.",n:"guest_list"}]},
+  examine_case:{icon:"🔬",loc:"The Display Case — Beaumont Gallery",ch:"Chapter II · The Lock",clue:"Clue: Lock opened with a correct key. Theatrical spirit gum detected inside the case.",
+    text:"The lock is undamaged — it was opened with a proper key. But inside the empty velvet hollow your nose detects something extraordinary: spirit gum. The adhesive used by theatrical performers for disguises.\n\n\"The ruby was never stolen during the gala,\" you announce to the bewildered Lestrade. \"It was removed before the event — and a glass replica was placed in its position until the lights were lowered.\"\n\nA replica. Someone substituted a glass imitation.",
+    ch_:[{l:"A",t:"Soames the jeweller could make a glass replica — question him immediately.",n:"confront_soames"},{l:"B",t:"Check who visited the gallery in the days before the gala.",n:"gallery_log"}]},
+  interview_forbes:{icon:"💂",loc:"The Guardroom — Beaumont Gallery",ch:"Chapter II · The Night Guard",clue:"Clue: Forbes accepted a bribe two weeks ago. Saw a gold signet ring with a serpent crest.",
+    text:"Forbes, the night guard, cannot quite meet your eyes. With gentle persistence, a story emerges.\n\nTwo weeks ago, a well-dressed gentleman offered him ten pounds to \"look the other way\" for five minutes while a friend retrieved \"a personal item\" from the case. Forbes, with three children and behind on his rent, accepted.\n\nHe saw only one thing clearly: a distinctive gold signet ring on the man's right hand, bearing a serpent crest.",
+    ch_:[{l:"A",t:"The serpent crest belongs to the Soames jewellery family. Confront him!",n:"confront_soames"},{l:"B",t:"Check the gallery visitor log first — confirm Soames was there before the gala.",n:"gallery_log"}]},
+  guest_list:{icon:"📋",loc:"The Gallery Office — Mayfair",ch:"Chapter II · The Guest List",clue:"Clue: Soames attended the gala but left one hour early — claiming illness.",
+    text:"You scan two hundred names. Most are above reproach. But one entry catches your eye: Mr. A. Soames, jeweller, listed as departing at 10:45 p.m. — one hour before the theft was discovered.\n\nA jeweller who leaves a gala early. A jeweller who had access to the case that very afternoon. A jeweller who could, without question, create a flawless glass replica of a fifty-carat ruby.\n\nYou look at Watson. Watson looks at you.",
+    ch_:[{l:"A",t:"Go to Soames's workshop at once — the ruby may still be on the premises.",n:"confront_soames"},{l:"B",t:"Examine the display case first — gather physical evidence.",n:"examine_case"}]},
+  confront_soames:{icon:"💍",loc:"Soames & Son, Jewellers — Hatton Garden",ch:"Chapter III · The Jeweller",clue:"Clue: Glass replica in furnace — still warm. Real ruby hidden in a ring mould.",
+    text:"You arrive at Soames & Son before the shop opens. In the workshop, the furnace holds the melted remains of a glass replica. And there, nestled in a ring mould on the workbench: the Star of Calcutta itself, wrapped in chamois leather.\n\nSoames arrives to find you and Lestrade examining it. His face tells the whole story.\n\nGambling debts. Access. Skill. And he very nearly got away with it.",
+    oc:"win",ot:"Case Solved!",os:"The substitute ruby gave the whole scheme away.",
+    end:"The Star of Calcutta is returned to Lord Beaumont, who weeps slightly. Soames is charged with theft and bribery.\n\n\"The spirit gum,\" Watson muses. \"How did you know to smell inside the case?\"\n\n\"When something disappears from a locked room, it rarely vanishes. It was simply never where everyone thought it was.\" ☕"},
+  gallery_log:{icon:"📖",loc:"The Gallery Office",ch:"Chapter II · The Visitor Log",clue:"Clue: Soames visited alone the afternoon before the gala — for a suspicious 45 minutes.",
+    text:"The visitor log shows Soames visited at 3 p.m. the afternoon before the gala, signed in as \"inspecting display case fittings.\" He was there forty-five minutes — more than enough time to swap a real ruby for a glass replica.\n\nMotive, opportunity, and means. There is only one place left to look.",
+    ch_:[{l:"A",t:"Go directly to Soames's workshop in Hatton Garden.",n:"confront_soames"}]},
+},
+midnight_train:{
+  start:{icon:"🚂",loc:"The 9:15 Express — Somewhere near Reading",ch:"Chapter I · Murder on the Rails",clue:"No evidence collected yet.",
+    text:"You and Watson are returning from a case in Bath when the 9:15 express lurches to an emergency stop. The conductor bursts into your carriage: Mr. Percival Hatch, a financier in the private compartment at the end of the train, has been found dead — stabbed, the door locked from the inside.\n\nFour other passengers are in the adjoining carriages: a Mrs. Dunmore with her daughter, a military man named Colonel Brace, and a quiet clergyman who gave his name as Reverend Dodd.\n\nThe train cannot move until the police arrive. You have perhaps an hour.",
+    ch_:[{l:"A",t:"Examine the locked compartment and the body for physical evidence.",n:"examine_compartment"},{l:"B",t:"Question the passengers — someone must have seen or heard something.",n:"question_passengers"},{l:"C",t:"Study the victim: who was Percival Hatch, and who might want him dead?",n:"victim_background"}]},
+  examine_compartment:{icon:"🔑",loc:"Private Compartment 7 — End Carriage",ch:"Chapter II · The Locked Door",clue:"Clue: Window latch broken recently. Military brass button on floor. Defensive scratches from a signet ring.",
+    text:"The door was locked from the inside. But the window latch is broken clean off — metal bright and unrusted. Someone came through the window.\n\nOn the compartment floor: a single button — brass, military pattern, stamped with a regimental number. On the victim's collar: three defensive scratches, fresh — made by a signet ring on someone's left hand.",
+    ch_:[{l:"A",t:"Colonel Brace is military and wears a signet ring — question him now.",n:"confront_brace"},{l:"B",t:"Ask Watson to identify the regimental number on the button.",n:"watson_regiment"},{l:"C",t:"Question all passengers before committing to a suspect.",n:"question_passengers"}]},
+  question_passengers:{icon:"🗣️",loc:"First Class Corridor",ch:"Chapter II · The Passengers",clue:"Clue: The clergyman's hands are calloused like a soldier's, not a man of the cloth.",
+    text:"You walk the length of the train, speaking to each passenger.\n\nMrs. Dunmore heard nothing — she and her daughter were asleep. Colonel Brace claims he was reading. Reverend Dodd says he was at prayer.\n\nBut when you shake Dodd's hand, you notice: rough, calloused in specific places — not from prayer books, but from holding a rifle and climbing. These are a soldier's hands.",
+    ch_:[{l:"A",t:"Confront 'Reverend Dodd' — he is no clergyman.",n:"confront_dodd"},{l:"B",t:"Check the compartment for physical evidence first.",n:"examine_compartment"}]},
+  victim_background:{icon:"💼",loc:"The Victim's Valise — Compartment 7",ch:"Chapter II · The Financier",clue:"Clue: Hatch was about to testify against Colonel Brace in a fraud trial next week.",
+    text:"You search Hatch's valise carefully. Beneath his shirts: draft testimony for a fraud case — Hatch was to appear in court next week, swearing against one \"Colonel R.H. Brace\" for misappropriation of regimental funds.\n\nIn the margin, a frightened note in Hatch's hand: \"He has found out I am travelling. I fear for myself.\"",
+    ch_:[{l:"A",t:"Confront Colonel Brace directly with this evidence.",n:"confront_brace"},{l:"B",t:"Examine the compartment for physical corroborating evidence.",n:"examine_compartment"}]},
+  confront_brace:{icon:"🎖️",loc:"Colonel Brace's Carriage",ch:"Chapter III · The Colonel",clue:"Clue: Missing button on Brace's jacket. Signet ring on left hand — matches scratches exactly.",
+    text:"You enter Colonel Brace's compartment without knocking. Your eyes go immediately to his jacket. The second button from the bottom is missing — the hole still trailing a thread.\n\nOn his left hand: a signet ring. You hold up the brass button. Brace's eyes dart to it and back to you.\n\n\"I believe,\" you say quietly, \"that this belongs to you, Colonel.\"\n\nBrace confesses: he climbed along the outside of the carriage in the dark, entered through the broken window, and silenced the one man who could destroy him.",
+    oc:"win",ot:"Case Solved!",os:"A button and a signet ring sealed his fate.",
+    end:"Colonel Brace is held under guard until police board at the next station. Percival Hatch's testimony convicts Brace at trial.\n\n\"A murder on a moving train, solved in under an hour,\" Watson says admiringly. \"That must be a record, Holmes.\"\n\n\"The train provided a limited suspect list. The culprit practically announced himself.\" ☕"},
+  confront_dodd:{icon:"⛪",loc:"The Clergyman's Carriage",ch:"Chapter III · The False Priest",clue:"Clue: 'Dodd' is Private Croft, AWOL — a frightened witness, not the killer.",
+    text:"When you press \"Reverend Dodd\" on his calloused hands, the man crumbles. He is not a clergyman — he is Private James Croft, absent without leave, travelling to London to testify against Colonel Brace for embezzling regimental funds.\n\nHe had nothing to do with Hatch's murder — but he confirms that Brace recognised Hatch at the platform in Bath and looked \"furious and frightened.\"\n\nYou have your killer — and it was never Dodd.",
+    ch_:[{l:"A",t:"Confront Colonel Brace now — with Dodd's testimony, the case is iron-tight.",n:"confront_brace"}]},
+  watson_regiment:{icon:"🎖️",loc:"Watson's Memory",ch:"Chapter II · Regimental Record",clue:"Clue: Button belongs to the 4th Hussars — Colonel Brace's own regiment.",
+    text:"Watson examines the button number immediately. \"4th Hussars,\" he says without hesitation. \"I'd recognise that stamp anywhere.\"\n\n\"Holmes — Colonel Brace mentioned serving with the 4th Hussars when we spoke briefly on the platform.\"\n\nOn Brace's left hand: a signet ring. The defensive scratches on Hatch's collar were made by a left-handed blow. Brace shook hands with you using his left hand when he introduced himself.",
+    ch_:[{l:"A",t:"Confront Colonel Brace now — the evidence is compelling.",n:"confront_brace"}]},
+},
+opera_ghost:{
+  start:{icon:"🎭",loc:"The Royal Covent Garden Opera House",ch:"Chapter I · The Phantom Note",clue:"No evidence collected yet.",
+    text:"The management of Covent Garden has received bizarre notes signed \"The Phantom of the Gallery\" — threatening to ruin the opening night of Rigoletto unless two hundred pounds is paid. The notes have been accompanied by a swaying chandelier during rehearsal, a slashed costume, and strange moaning from behind the back wall.\n\nThe theatre staff are in a state of superstitious panic. But you do not believe in phantoms.\n\nWhere do you begin?",
+    ch_:[{l:"A",t:"Examine the threatening notes — a phantom's handwriting is still handwriting.",n:"phantom_notes"},{l:"B",t:"Inspect the area behind the back wall where the moaning was heard.",n:"behind_wall"},{l:"C",t:"Question the theatre staff about anyone with a grievance against management.",n:"staff_grudge"}]},
+  phantom_notes:{icon:"📜",loc:"The Manager's Office — Covent Garden",ch:"Chapter II · The Notes",clue:"Clue: Notes printed with compositor's wooden type from the props department. Smell of scene paint.",
+    text:"The notes are not handwritten — the letters are formed using compositor's wooden printing type, available in the theatre's props department. Someone with access to the props store is behind this.\n\nThe paper smells faintly of scene paint. Only people who work backstage would carry that smell on their hands.\n\nNot a phantom. A theatrical professional with a grievance.",
+    ch_:[{l:"A",t:"Inspect the props department and see who has access to the printing type.",n:"props_dept"},{l:"B",t:"Question the theatre staff about internal grievances.",n:"staff_grudge"}]},
+  behind_wall:{icon:"🕳️",loc:"The Back Wall — Stage Left",ch:"Chapter II · The Hidden Passage",clue:"Clue: Secret room behind the false wall. Someone has been living there. Gunn's dismissed contract found.",
+    text:"You find it almost immediately: a barely-visible seam in the stage left wall. You press it and a panel swings open into a cramped, dusty room — the old sound-effects chamber.\n\nBut someone has been using it recently. A blanket. Empty food tins. A candle stub. And pinned to the wall: a rejected contract from the opera management — dismissing a former lighting engineer named Albert Gunn \"for insubordination.\"\n\nThe \"phantom\" has been living in the theatre walls.",
+    ch_:[{l:"A",t:"Search the theatre for Albert Gunn — he must still be on the premises.",n:"find_gunn"},{l:"B",t:"Question the management about Gunn and why he was dismissed.",n:"staff_grudge"}]},
+  staff_grudge:{icon:"😠",loc:"The Green Room — Covent Garden",ch:"Chapter II · The Grudge",clue:"Clue: Albert Gunn, former lighting engineer, dismissed six months ago. Swore revenge.",
+    text:"The staff tell you about Albert Gunn with visible discomfort. He was the theatre's head lighting engineer for eleven years — dismissed six months ago to save costs.\n\nGunn was devastated. He swore publicly that he would \"make Covent Garden sorry.\"\n\n\"Has anyone seen him since?\" Watson asks.\n\nThe stagehands exchange glances. \"Now and then I smell pipe smoke in the fly tower,\" one murmurs. \"But we assumed it was old Marchetti the rigger...\"",
+    ch_:[{l:"A",t:"Search the fly tower and hidden areas of the theatre for Gunn.",n:"find_gunn"},{l:"B",t:"Examine the threatening notes for more evidence first.",n:"phantom_notes"}]},
+  props_dept:{icon:"🎪",loc:"The Props Department — Basement",ch:"Chapter III · The Props Room",clue:"Clue: Printing type ink still tacky — used within 24 hours. Gunn's old staff badge found.",
+    text:"In the props department, behind a cabinet of theatrical masks, you find the wooden printing type — and the ink is still slightly tacky. Someone used this within the last twenty-four hours.\n\nBehind the cabinet: a staff identity badge. Albert Gunn, Head of Lighting, Covent Garden Opera House.\n\nHe has been living in this building for months without anyone realising.",
+    ch_:[{l:"A",t:"Find Gunn — he must be somewhere in the theatre right now.",n:"find_gunn"}]},
+  find_gunn:{icon:"🕯️",loc:"The Fly Tower — High Above the Stage",ch:"Chapter III · The Phantom Unmasked",clue:"Clue: Gunn found in the fly tower — harmless. A lonely man who loved his theatre.",
+    text:"You find Albert Gunn in the fly tower, perched on a beam sixty feet above the stage, watching a rehearsal below with an expression of melancholy pride.\n\nHe does not run. When you climb up to him, he looks at you with tired eyes.\n\n\"I only wanted them to know what this place was without me,\" he says quietly. \"I didn't want to hurt anyone. I just wanted them to remember.\"\n\nHe is a thin, gentle man of sixty with ink-stained fingers and the saddest face you have seen in a long time.",
+    oc:"win",ot:"Case Solved!",os:"The phantom was only a man who loved his work.",
+    end:"Gunn is brought down and handed to the police — though you speak privately to the manager, who agrees to drop all charges if Gunn leaves London.\n\nAs you exit into the night, Watson says quietly, \"Not all criminals are wicked, are they.\"\n\n\"No,\" you agree. \"Some are merely broken. Our job is to know the difference.\" ☕"},
+},
+blind_clockmaker:{
+  start:{icon:"🕰️",loc:"Clerkenwell — The Watch Quarter",ch:"Chapter I · The Silent Workshop",clue:"No evidence collected yet.",
+    text:"Old Erasmus Webb, a blind clockmaker renowned throughout London, has been found bound and gagged in his workshop — alive, but shaken. His life's work, a mechanical masterpiece called the \"Celestial Orrery\" — a clock that maps the movements of all nine planets — has been stolen.\n\nWebb cannot identify his attacker by sight. But he insists he knows exactly who did it: \"I heard his voice. I know every sound in this workshop. It was Jacob.\" His apprentice of seven years, Jacob Nare, who vanished the same morning.\n\nBut is it as simple as it seems?",
+    ch_:[{l:"A",t:"Ask Mr. Webb what he heard and smelled — his non-visual senses are the evidence.",n:"webb_senses"},{l:"B",t:"Search the workshop thoroughly for physical clues.",n:"workshop_search"},{l:"C",t:"Find where Jacob Nare has gone — trail the obvious suspect first.",n:"find_jacob"}]},
+  webb_senses:{icon:"👂",loc:"The Workshop — Erasmus Webb's Chair",ch:"Chapter II · The Blind Witness",clue:"Clue: Webb heard TWO voices — one foreign and commanding. Heavy industrial oil on the stranger's coat.",
+    text:"Webb closes his sightless eyes and thinks carefully — the discipline of a man who has lived by his other senses for twenty years.\n\n\"There were two of them,\" he says suddenly. \"Jacob's voice I knew — frightened, he was. But the other voice was a stranger's. Commanding. He had an accent — Eastern European, perhaps. And his coat smelled of machine oil. Not watchmaker's oil. Something heavier. Industrial.\"\n\nTwo men. Jacob may have been coerced, not a willing thief.",
+    ch_:[{l:"A",t:"Find Jacob Nare — he may be a victim, not a criminal.",n:"find_jacob"},{l:"B",t:"Search the workshop for the stranger's physical traces.",n:"workshop_search"}]},
+  workshop_search:{icon:"🔎",loc:"The Workshop — Clerkenwell",ch:"Chapter II · The Workshop",clue:"Clue: Size twelve dock worker's boot print. Industrial steam oil smear. Jacob's boots are size eight.",
+    text:"The workshop floor tells a story. Among the fine sawdust of a clockmaker's trade, you find a heavy boot print — size twelve, with a hobnail pattern used by dock workers on the Thames. And a smear of thick dark oil — used in steam machinery.\n\nThis was not Jacob Nare, a slight young man of twenty-two. Jacob's boots, visible on a rack by the door, are size eight.\n\nThe Orrery was stolen by someone from the docks. Jacob may simply have been in the wrong place.",
+    ch_:[{l:"A",t:"Go to the Thames docks — the oil and boot print point there directly.",n:"docks"},{l:"B",t:"Find Jacob first — he can identify the second man.",n:"find_jacob"}]},
+  find_jacob:{icon:"🏃",loc:"Jacob Nare's Lodgings — Clerkenwell",ch:"Chapter II · The Apprentice",clue:"Clue: Jacob was threatened into helping — the man threatened Mr. Webb's life.",
+    text:"Jacob Nare is hiding in his lodgings, white-faced and trembling. He tells his story in a rush: three days ago a large man with an Eastern European accent visited the workshop. He returned alone, cornered Jacob in the street, and told him to leave the workshop door unlatched that morning — or \"the old blind man will not see Christmas.\"\n\nJacob, terrified for his master, obeyed. He fled in horror when he heard Webb being tied up.",
+    ch_:[{l:"A",t:"The man was staying near the Thames — go to the docks.",n:"docks"},{l:"B",t:"Return to the workshop and analyse the oil residue for more precision.",n:"workshop_search"}]},
+  docks:{icon:"⚓",loc:"Thames Dockside — Wapping",ch:"Chapter III · The Docks",clue:"Clue: The Orrery found in a crate addressed to Vienna. The smuggler is in custody.",
+    text:"At Wapping dock, the harbourmaster's records show a large crate consigned to a collector in Vienna, lodged that morning by a man matching the description — foreign accent, heavy build, industrial hands.\n\nYou and Lestrade find the crate before it can be loaded. Inside, packed in velvet: the Celestial Orrery, its tiny planets still perfectly arranged.\n\nThe man, a professional art smuggler named Brandt, is apprehended at his lodgings an hour later. Jacob Nare is cleared of all wrongdoing.",
+    oc:"win",ot:"Case Solved!",os:"A blind man's ears guided the entire investigation.",
+    end:"Webb runs his fingers over the Orrery's surface — every gear and planet accounted for.\n\n\"The boy is innocent?\" he asks.\n\n\"Completely,\" you say. \"He tried to protect you the only way he knew how.\"\n\nWatson says on the walk home, \"Sometimes loyalty is the most reliable evidence of all.\" ☕"},
+},
+red_thread:{
+  start:{icon:"🧵",loc:"The East End — Spitalfields Silk Market",ch:"Chapter I · The Body in the Alley",clue:"No evidence collected yet.",
+    text:"A silk merchant named Thomas Quill has been found dead behind his warehouse in Spitalfields. He was not robbed — his wallet and watch are intact. But clutched in his right hand is a single length of red silk thread, and on his office floor, the word \"LOOM\" scratched into the wood with a fingernail.\n\nThree traders had disputes with Quill: Mrs. Faulkner, who claims he stole her designs; Mr. Ivers, who lost a contract to him; and Quill's own business partner Mr. Sable, who stands to inherit.\n\nThe red thread is the key. You feel it immediately.",
+    ch_:[{l:"A",t:"Examine the red thread — determine what type of silk it is and where it was made.",n:"analyse_thread"},{l:"B",t:"Inspect the warehouse and search for what 'LOOM' might mean.",n:"warehouse_search"},{l:"C",t:"Interview the three suspects — read their reactions to the news.",n:"interview_suspects"}]},
+  analyse_thread:{icon:"🔬",loc:"Baker Street — Your Laboratory",ch:"Chapter II · The Thread",clue:"Clue: Rare Lyons dye sold through one London importer only — bought exclusively by Mrs. Faulkner.",
+    text:"You examine the thread under your microscope. The silk is dyed with a Lyons cochineal process — expensive, distinctive, and sold in London through exactly one importer on Ludgate Hill.\n\nWatson fetches your files. The importer's records show one regular customer for this exact dye lot: Faulkner's Silk Designs, Spitalfields.\n\nQuill was clutching Mrs. Faulkner's own thread. A dying message, left deliberately.",
+    ch_:[{l:"A",t:"Confront Mrs. Faulkner immediately with this evidence.",n:"confront_faulkner"},{l:"B",t:"First investigate the warehouse and what 'LOOM' means — verify everything.",n:"warehouse_search"}]},
+  warehouse_search:{icon:"🏭",loc:"Quill's Warehouse — Spitalfields",ch:"Chapter II · The Warehouse",clue:"Clue: 'LOOM' is Loom Lane — address of Faulkner's business, one block away.",
+    text:"You search the warehouse methodically. A floor plan pinned to the wall shows the surrounding streets — and there, one block away, is Loom Lane. Faulkner's Silk Designs occupies the corner building.\n\nQuill was not writing a mysterious code. He was writing the name of the street where his killer worked. He knew exactly who had attacked him, and chose his last message with care.\n\nThe red thread and the street name point to the same person.",
+    ch_:[{l:"A",t:"Go to Faulkner's premises on Loom Lane at once.",n:"confront_faulkner"},{l:"B",t:"Analyse the red thread first to confirm its origin.",n:"analyse_thread"}]},
+  interview_suspects:{icon:"🗣️",loc:"The Silk Market — Spitalfields",ch:"Chapter II · Three Suspects",clue:"Clue: Mrs. Faulkner alone shows fresh ink on her right hand — as if she wrote something quickly this morning.",
+    text:"You speak to all three in turn. Mr. Ivers was at a suppliers' meeting in Manchester yesterday, with twelve witnesses. Mr. Sable, Quill's partner, is distressed and cooperative.\n\nBut Mrs. Faulkner is guarded. She speaks too carefully. And on her right hand: the faint trace of fresh ink, as though she wrote something quickly this morning and washed her hands — not quite thoroughly enough.",
+    ch_:[{l:"A",t:"Press Mrs. Faulkner further — examine her hands and her office.",n:"confront_faulkner"},{l:"B",t:"Analyse the red thread before accusing anyone.",n:"analyse_thread"}]},
+  confront_faulkner:{icon:"🧶",loc:"Faulkner's Silk Designs — Loom Lane",ch:"Chapter III · The Silk Merchant",clue:"Clue: Mrs. Faulkner's spool is missing one length — matching the thread in Quill's hand exactly.",
+    text:"You arrive at Faulkner's premises unannounced. When you place the red thread on her table and ask her to compare it to her Lyons dye stock, her composure fractures.\n\nThe spool in her workroom is missing precisely one length — the thread that Quill died clutching.\n\nThe story emerges: Quill had stolen her original designs two years ago and sold them under his own name. She confronted him in the alley. The argument escalated. She did not intend to kill him.",
+    oc:"win",ot:"Case Solved!",os:"The dying message in red thread revealed the truth.",
+    end:"Mrs. Faulkner is taken into custody. As you leave Loom Lane, Watson is quiet for a long moment.\n\n\"Do you think she deserved what she went through — the stolen designs, the ruined reputation?\"\n\n\"Undoubtedly,\" you say. \"But the answer to injustice is never more injustice. That is why we have courts, Watson — and why we have detectives.\" ☕"},
+}
+};
+
+// ── STATE (session-only: resets on page leave/reload) ──
+let solvedCases=[];
+let points=0;
+let ownedThemes=['classic'];
+let activeTheme='classic';
+let caseId=null,scenes=null;
+let earnedAttempt=new Set();
+
+// ── THEMES ──
+const THEMES=[
+  {id:'classic',name:'Classic Parchment',desc:'The original Victorian look.',price:0,preview:'linear-gradient(135deg,#f5e9c8,#e8d5a0)'},
+  {id:'midnight',name:'Midnight Blue',desc:'Dark indigo for late-night sleuthing.',price:20,preview:'linear-gradient(135deg,#1e1a2e,#2a2540)'},
+  {id:'crimson',name:'Crimson Dread',desc:'Blood-red for the darkest cases.',price:30,preview:'linear-gradient(135deg,#2a1010,#3a1818)'},
+  {id:'forest',name:'Forest Dark',desc:'Deep emerald green tones.',price:30,preview:'linear-gradient(135deg,#0f1e10,#162018)'},
+  {id:'fog',name:'London Fog',desc:'Cool grey mist over the Thames.',price:25,preview:'linear-gradient(135deg,#dce4ea,#ccd8e0)'},
+];
+
+function updateHUD(){
+  document.getElementById('pts-val').textContent=points;
+  document.getElementById('shop-pts').textContent=points;
+}
+
+function applyTheme(id){
+  THEMES.forEach(t=>document.body.classList.remove('theme-'+t.id));
+  if(id!=='classic') document.body.classList.add('theme-'+id);
+  activeTheme=id;
+}
+
+// ── SHOP ──
+function openShop(){
+  renderShop();
+  document.getElementById('shop-overlay').classList.remove('hidden');
+}
+function closeShop(){document.getElementById('shop-overlay').classList.add('hidden');}
+function closeShopIfOutside(e){if(e.target.id==='shop-overlay')closeShop();}
+
+function renderShop(){
+  document.getElementById('shop-pts').textContent=points;
+  const g=document.getElementById('theme-grid');
+  g.innerHTML='';
+  THEMES.forEach(t=>{
+    const owned=ownedThemes.includes(t.id);
+    const active=activeTheme===t.id;
+    const canAfford=points>=t.price;
+    const locked=!owned&&!canAfford;
+    const card=document.createElement('div');
+    card.className='theme-card'+(active?' active-theme':owned?' owned':locked?' locked-theme':'');
+    let badgeHtml=active?'<span class="theme-badge active">Active</span>':owned?'<span class="theme-badge owned">Owned</span>':'';
+    let priceHtml='';
+    if(owned&&!active) priceHtml=`<span class="theme-price free" style="cursor:pointer">✓ Equip</span>`;
+    else if(active) priceHtml=`<span class="theme-price free">Currently Active</span>`;
+    else if(canAfford) priceHtml=`<span class="theme-price cost">🪙 ${t.price} pts — Buy</span>`;
+    else priceHtml=`<span class="theme-price cant-afford">🪙 ${t.price} pts needed</span>`;
+    card.innerHTML=`${badgeHtml}<div class="theme-preview" style="background:${t.preview}"></div><div class="theme-name">${t.name}</div><div class="theme-desc">${t.desc}</div>${priceHtml}`;
+    if((owned||canAfford)&&!active){
+      card.style.cursor='pointer';
+      card.addEventListener('click',()=>{
+        if(!owned){if(points<t.price)return;points-=t.price;ownedThemes.push(t.id);}
+        applyTheme(t.id);renderShop();updateHUD();
+      });
+    }
+    g.appendChild(card);
+  });
+}
+
+// ── RESET ──
+function confirmReset(){
+  if(confirm('Reset ALL progress? This cannot be undone.')){
+    solvedCases=[];points=0;ownedThemes=['classic'];activeTheme='classic';earnedAttempt=new Set();
+    applyTheme('classic');updateHUD();renderMenu();
+  }
+}
+
+// ── RENDER MENU ──
+function renderMenu(){
+  const grid=document.getElementById('cases-grid');
+  grid.innerHTML='';
+  const unlocked=new Set(['locked_room']);
+  CASE_META.forEach((m,i)=>{if(i>0&&solvedCases.includes(CASE_META[i-1].id))unlocked.add(m.id);});
+  const s=solvedCases.length,t=CASE_META.length;
+  document.getElementById('menu-footer-msg').textContent=s===0?'Begin with Case I \u2014 the others will follow in time.':s===t?'\u2746 All eight cases solved. The game is won, Detective. \u2746':`${s} of ${t} cases solved. Solve each case to unlock the next.`;
+  CASE_META.forEach(m=>{
+    const solved=solvedCases.includes(m.id),open=unlocked.has(m.id)||m.unlocked;
+    const sl=document.createElement('div');
+    sl.className='case-slot '+(solved?'solved':open?'unlocked':'locked');
+    if(solved){sl.innerHTML=`<div class="solved-badge">Solved</div><div class="slot-icon">${m.icon}</div><div class="slot-label">${m.number}<br>${m.title}</div>`;sl.addEventListener('click',()=>startCase(m.id));}
+    else if(open){sl.innerHTML=`<div class="slot-icon">${m.icon}</div><div class="slot-label">${m.number}<br>${m.title}</div>`;sl.addEventListener('click',()=>startCase(m.id));}
+    else{sl.innerHTML=`<div class="slot-icon" style="font-size:1.8rem;opacity:.5">🔒</div><div class="slot-label">LOCKED</div>`;}
+    grid.appendChild(sl);
+  });
+  document.getElementById('game-screen').classList.remove('active');
+  document.getElementById('menu-screen').classList.add('active');
+  updateHUD();
+}
+
+function startCase(id){
+  const m=CASE_META.find(c=>c.id===id);
+  caseId=id;scenes=C[id];
+  // Award attempt points once per case
+  if(!earnedAttempt.has(id)){earnedAttempt.add(id);points+=5;updateHUD();}
+  document.getElementById('game-case-number').textContent=m.number;
+  document.getElementById('game-case-title').textContent=m.title;
+  document.getElementById('menu-screen').classList.remove('active');
+  document.getElementById('game-screen').classList.add('active');
+  goToScene('start');
+}
+
+function goToScene(sid){
+  const s=scenes[sid];if(!s)return;
+  document.getElementById('scene-icon').textContent=s.icon;
+  document.getElementById('scene-location').textContent=s.loc;
+  document.getElementById('chapter-tag').textContent=s.ch;
+  document.getElementById('clue-display').textContent=s.clue;
+  const st=document.getElementById('story-text'),ob=document.getElementById('outcome-banner'),cs=document.getElementById('choices-section'),rb=document.getElementById('restart-btn');
+  if(s.oc){
+    ob.className='outcome-banner '+s.oc;
+    ob.innerHTML=`<span class="outcome-icon">${s.oc==='win'?'🏆':'🌫️'}</span><div class="outcome-title">${s.ot}</div><div class="outcome-subtitle">${s.os}</div>`;
+    ob.classList.remove('hidden');st.textContent=s.end;cs.classList.add('hidden');rb.classList.remove('hidden');
+    if(s.oc==='win'&&!solvedCases.includes(caseId)){solvedCases.push(caseId);points+=10;updateHUD();}
+  }else{
+    ob.classList.add('hidden');st.textContent=s.text;cs.classList.remove('hidden');rb.classList.add('hidden');
+    const g=document.getElementById('choices-grid');g.innerHTML='';
+    (s.ch_||[]).forEach(c=>{
+      const b=document.createElement('button');b.className='choice-btn';
+      b.innerHTML=`<span class="choice-letter">${c.l}</span><span class="choice-text">${c.t}</span>`;
+      b.addEventListener('click',()=>{b.style.opacity='.7';setTimeout(()=>{b.style.opacity='1';goToScene(c.n);},180);});
+      g.appendChild(b);
+    });
+  }
+  const card=document.querySelector('#game-screen .case-card');
+  card.classList.remove('fade-in');void card.offsetWidth;card.classList.add('fade-in');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function restartCurrentCase(){goToScene('start');}
+function goToMenu(){renderMenu();window.scrollTo({top:0,behavior:'smooth'});}
+renderMenu();
+</script>
+</body>
+</html>
